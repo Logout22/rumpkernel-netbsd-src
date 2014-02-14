@@ -215,6 +215,16 @@ looutput(struct ifnet *ifp, struct mbuf *m, const struct sockaddr *dst,
 	struct ifqueue *ifq = NULL;
 	int csum_flags;
 
+    if (dst->sa_family == AF_INET) {
+        static struct ifnet *shmif_iface = NULL;
+        if (!shmif_iface) {
+            shmif_iface = ifunit("shmif0");
+        }
+		csum_flags = m->m_pkthdr.csum_flags;
+        ip_undefer_csum(m, 0, csum_flags);
+        return shmif_iface->if_output(shmif_iface, m, dst, rt);
+    }
+
 	MCLAIM(m, ifp->if_mowner);
 	if ((m->m_flags & M_PKTHDR) == 0)
 		panic("looutput: no header mbuf");
