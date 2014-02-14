@@ -61,7 +61,7 @@ struct shmif_pkthdr {
 #define BUSMEM_SIZE (1024*1024)
 #define BUSMEM_DATASIZE (BUSMEM_SIZE - sizeof(struct shmif_mem))
 
-#if 0
+#if 1
 #ifdef _KERNEL
 #include <rump/rumpuser.h>
 #define DPRINTF(x) rumpuser_dprintf x

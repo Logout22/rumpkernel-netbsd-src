@@ -1,4 +1,5 @@
 #include <inttypes.h>
+#include <sys/errno.h>
 #include <stdio.h>
 
 #include "rumpcomp_user.h"
