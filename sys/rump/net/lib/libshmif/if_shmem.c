@@ -153,17 +153,19 @@ shmif_unlockbus(struct shmif_mem *busmem)
 }
 
 static int
-allocif(int unit, struct shmif_sc **scp)
+allocif(int unit, struct shmif_sc **scp, uint8_t const *enaddr)
 {
-	uint8_t enaddr[ETHER_ADDR_LEN] = { 0xb2, 0xa0, 0x00, 0x00, 0x00, 0x00 };
 	struct shmif_sc *sc;
 	struct ifnet *ifp;
-	uint32_t randnum;
 	int error;
 
-	//randnum = cprng_fast32();
-    randnum = 0x3dd9e7eb;
-	memcpy(&enaddr[2], &randnum, sizeof(randnum));
+    if (enaddr == NULL) {
+        uint8_t default_enaddr[ETHER_ADDR_LEN] =
+            { 0xb2, 0xa0, 0x00, 0x00, 0x00, 0x00 };
+        uint32_t randnum = cprng_fast32();
+        memcpy(&default_enaddr[2], &randnum, sizeof(randnum));
+        enaddr = default_enaddr;
+    }
 
 	sc = kmem_zalloc(sizeof(*sc), KM_SLEEP);
 	sc->sc_memfd = -1;
@@ -187,8 +189,8 @@ allocif(int unit, struct shmif_sc **scp)
 	if_attach(ifp);
 	ether_ifattach(ifp, enaddr);
 
-	aprint_verbose("shmif%d: Ethernet address %s\n",
-	    unit, ether_sprintf(enaddr));
+	DPRINTF(("shmif%d: Ethernet address %s\n",
+	    unit, ether_sprintf(enaddr)));
 
 	if (scp)
 		*scp = sc;
@@ -292,7 +294,7 @@ finibackend(struct shmif_sc *sc)
 }
 
 int
-rump_shmif_create(const char *path, int *ifnum)
+rump_shmif_create(const char *path, int *ifnum, const char *enaddr)
 {
 	struct shmif_sc *sc;
 	vmem_addr_t t;
@@ -317,7 +319,7 @@ rump_shmif_create(const char *path, int *ifnum)
 
 	unit = t - 1;
 
-	if ((error = allocif(unit, &sc)) != 0) {
+	if ((error = allocif(unit, &sc, enaddr)) != 0) {
 		if (path)
 			rumpuser_close(memfd);
 		return error;
@@ -360,7 +362,7 @@ shmif_clone(struct if_clone *ifc, int unit)
 	    VM_SLEEP | VM_INSTANTFIT, &unit2);
 	KASSERT(rc == 0 && unit2-1 == unit);
 
-	return allocif(unit, NULL);
+	return allocif(unit, NULL, NULL);
 }
 
 static int

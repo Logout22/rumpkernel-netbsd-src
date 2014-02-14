@@ -2,8 +2,8 @@
 
 /*
  * Automatically generated.  DO NOT EDIT.
- * from: NetBSD: rumpnet.ifspec,v 1.3 2013/07/03 19:21:11 pooka Exp 
- * by:   NetBSD: makerumpif.sh,v 1.6 2013/02/14 10:54:54 pooka Exp 
+ * from: NetBSD: rumpnet.ifspec,v 1.3 2013/07/03 19:21:11 pooka Exp
+ * by:   NetBSD: makerumpif.sh,v 1.6 2013/02/14 10:54:54 pooka Exp
  */
 
 #include <sys/cdefs.h>
@@ -24,12 +24,12 @@ rump_net_unavailable(void)
 }
 
 int
-rump_pub_shmif_create(const char *arg1, int *arg2)
+rump_pub_shmif_create(const char *arg1, int *arg2, const char *arg3)
 {
 	int rv;
 
 	rump_schedule();
-	rv = rump_shmif_create(arg1, arg2);
+	rv = rump_shmif_create(arg1, arg2, arg3);
 	rump_unschedule();
 
 	return rv;
