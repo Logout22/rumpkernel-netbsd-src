@@ -141,7 +141,7 @@ static void ip_mloopback(struct ifnet *, struct mbuf *,
 
 extern pfil_head_t *inet_pfil_hook;			/* XXX */
 
-int	ip_do_loopback_cksum = 0;
+int	ip_do_loopback_cksum = 1;
 
 /*
  * IP output.  The packet in mbuf chain m contains a skeletal IP
