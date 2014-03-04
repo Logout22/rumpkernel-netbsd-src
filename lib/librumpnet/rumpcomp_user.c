@@ -4,11 +4,12 @@
 #include "rumpcomp_user.h"
 #include "swarm_client_ipc.c"
 
+// TODO SO_REUSEPORT
 int rumpcomp_librumpnet_hive_request_port(
         uint16_t port, int32_t *p_bind_result,
         int netbsd_kernel_protocol) {
 	int err;
-	if ((err = request_hive_bind(netbsd_kernel_protocol, port))) {
+	if ((err = request_hive_bind_proc(netbsd_kernel_protocol, port, 0))) {
 		//DPRINTF(("Failed to send bind request: %d\n", err));
 		return EINVAL;
 	}

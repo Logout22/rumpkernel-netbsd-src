@@ -103,6 +103,9 @@ __KERNEL_RCSID(0, "$NetBSD: uipc_socket.c,v 1.220 2013/11/02 20:09:33 christos E
 #include <uvm/uvm_loan.h>
 #include <uvm/uvm_page.h>
 
+#include "rumpcomp_user.h"
+extern int netbsd_kernel_protocol;
+
 MALLOC_DEFINE(M_SOOPTS, "soopts", "socket options");
 MALLOC_DEFINE(M_SONAME, "soname", "socket name");
 
@@ -622,7 +625,7 @@ solisten(struct socket *so, int backlog, struct lwp *l)
 	int	error;
 
 	solock(so);
-	if ((so->so_state & (SS_ISCONNECTED | SS_ISCONNECTING | 
+	if ((so->so_state & (SS_ISCONNECTED | SS_ISCONNECTING |
 	    SS_ISDISCONNECTING)) != 0) {
 	    	sounlock(so);
 		return (EINVAL);
@@ -744,6 +747,9 @@ soclose(struct socket *so)
 		    NULL, NULL, NULL, NULL);
 		if (error == 0)
 			error = error2;
+
+        // unbind connection
+        request_hive_bind_proc(netbsd_kernel_protocol, port, 1);
 	}
  discard:
 	if (so->so_state & SS_NOFDREF)
@@ -762,7 +768,7 @@ soabort(struct socket *so)
 {
 	u_int refs;
 	int error;
-	
+
 	KASSERT(solocked(so));
 	KASSERT(so->so_head == NULL);
 
@@ -1870,7 +1876,7 @@ so_setsockopt(struct lwp *l, struct socket *so, int level, int name,
 
 	return error;
 }
- 
+
 /*
  * internal get SOL_SOCKET options
  */
@@ -2199,7 +2205,7 @@ filt_soread(struct knote *kn, long hint)
 		rv = 1;
 	else if (kn->kn_sfflags & NOTE_LOWAT)
 		rv = (kn->kn_data >= kn->kn_sdata);
-	else 
+	else
 		rv = (kn->kn_data >= so->so_rcv.sb_lowat);
 	if (hint != NOTE_SUBMIT)
 		sounlock(so);
