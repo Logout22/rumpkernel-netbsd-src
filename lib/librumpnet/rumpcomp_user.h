@@ -4,7 +4,7 @@
 int rumpcomp_librumpnet_hive_request_port(
         uint16_t port, int32_t *p_bind_result,
         int netbsd_kernel_protocol);
-int request_hive_bind_proc(
-        uint32_t protocol, uint32_t port, uint8_t unbind);
+void rumpcomp_librumpnet_hive_remove_port(
+        uint16_t port, int netbsd_kernel_protocol);
 
 #endif

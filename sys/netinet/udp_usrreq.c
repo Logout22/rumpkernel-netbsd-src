@@ -144,6 +144,7 @@ __KERNEL_RCSID(0, "$NetBSD: udp_usrreq.c,v 1.193 2014/01/04 14:18:12 pooka Exp $
 int	udpcksum = 1;
 int	udp_do_loopback_cksum = 0;
 
+#include "rumpcomp_user.h"
 extern int netbsd_kernel_protocol;
 
 struct	inpcbtable udbtable;
@@ -1265,6 +1266,8 @@ udp_usrreq(struct socket *so, int req, struct mbuf *m, struct mbuf *nam,
 		break;
 
 	case PRU_DETACH:
+        rumpcomp_librumpnet_hive_remove_port(
+                ntohs(inp->inp_lport), netbsd_kernel_protocol);
 		in_pcbdetach(inp);
 		break;
 

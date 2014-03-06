@@ -27,3 +27,8 @@ int rumpcomp_librumpnet_hive_request_port(
 	return 0;
 }
 
+void rumpcomp_librumpnet_hive_remove_port(
+        uint16_t port, int netbsd_kernel_protocol) {
+    request_hive_bind_proc(netbsd_kernel_protocol, port, 1);
+}
+

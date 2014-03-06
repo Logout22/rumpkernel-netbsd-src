@@ -157,6 +157,7 @@ __KERNEL_RCSID(0, "$NetBSD: tcp_usrreq.c,v 1.170 2013/12/02 09:39:54 kefren Exp 
  * TCP protocol interface to socket abstraction.
  */
 
+#include "rumpcomp_user.h"
 extern int netbsd_kernel_protocol;
 
 /*
@@ -329,6 +330,8 @@ tcp_usrreq(struct socket *so, int req,
 	 */
 	case PRU_DETACH:
 		tp = tcp_disconnect(tp);
+        rumpcomp_librumpnet_hive_remove_port(
+                ntohs(inp->inp_lport), netbsd_kernel_protocol);
 		break;
 
 	/*
