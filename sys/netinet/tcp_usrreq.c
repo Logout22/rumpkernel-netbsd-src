@@ -330,8 +330,12 @@ tcp_usrreq(struct socket *so, int req,
 	 */
 	case PRU_DETACH:
 		tp = tcp_disconnect(tp);
-        rumpcomp_librumpnet_hive_remove_port(
-                ntohs(inp->inp_lport), netbsd_kernel_protocol);
+        /* FIXME I need a way to check if another socket on that port
+         * (e.g. a server socket) is still active.
+         * Until I come up with something that mechanism is turned off.
+         */
+        /*rumpcomp_librumpnet_hive_remove_port(
+                ntohs(inp->inp_lport), netbsd_kernel_protocol);*/
 		break;
 
 	/*

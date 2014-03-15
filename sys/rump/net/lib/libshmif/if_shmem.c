@@ -153,17 +153,11 @@ shmif_unlockbus(struct shmif_mem *busmem)
 }
 
 static int
-allocif(int unit, struct shmif_sc **scp)
+allocif(int unit, uint8_t const *enaddr, struct shmif_sc **scp)
 {
-	uint8_t enaddr[ETHER_ADDR_LEN] = { 0xb2, 0xa0, 0x00, 0x00, 0x00, 0x00 };
 	struct shmif_sc *sc;
 	struct ifnet *ifp;
-	uint32_t randnum;
 	int error;
-
-	//randnum = cprng_fast32();
-    randnum = 0x3dd9e7eb;
-	memcpy(&enaddr[2], &randnum, sizeof(randnum));
 
 	sc = kmem_zalloc(sizeof(*sc), KM_SLEEP);
 	sc->sc_memfd = -1;
@@ -226,7 +220,7 @@ initbackend(struct shmif_sc *sc, int memfd)
 	    && sc->sc_busmem->shm_magic != SHMIF_MAGIC) {
 		printf("bus is not magical");
 		rumpuser_unmap(sc->sc_busmem, BUSMEM_SIZE);
-		return ENOEXEC; 
+		return ENOEXEC;
 	}
 
 	/*
@@ -292,7 +286,7 @@ finibackend(struct shmif_sc *sc)
 }
 
 int
-rump_shmif_create(const char *path, int *ifnum)
+rump_shmif_create(const char *path, const uint8_t* mac_address, int *ifnum)
 {
 	struct shmif_sc *sc;
 	vmem_addr_t t;
@@ -317,7 +311,7 @@ rump_shmif_create(const char *path, int *ifnum)
 
 	unit = t - 1;
 
-	if ((error = allocif(unit, &sc)) != 0) {
+	if ((error = allocif(unit, mac_address, &sc)) != 0) {
 		if (path)
 			rumpuser_close(memfd);
 		return error;
@@ -346,6 +340,8 @@ rump_shmif_create(const char *path, int *ifnum)
 static int
 shmif_clone(struct if_clone *ifc, int unit)
 {
+	uint8_t enaddr[ETHER_ADDR_LEN] = { 0xb2, 0xa0, 0x00, 0x00, 0x00, 0x00 };
+	uint32_t randnum;
 	int rc;
 	vmem_addr_t unit2;
 
@@ -360,7 +356,10 @@ shmif_clone(struct if_clone *ifc, int unit)
 	    VM_SLEEP | VM_INSTANTFIT, &unit2);
 	KASSERT(rc == 0 && unit2-1 == unit);
 
-	return allocif(unit, NULL);
+	randnum = cprng_fast32();
+	memcpy(&enaddr[2], &randnum, sizeof(randnum));
+
+	return allocif(unit, enaddr, NULL);
 }
 
 static int
@@ -675,7 +674,7 @@ shmif_rcv(void *arg)
 		KASSERT(busmem->shm_gen >= sc->sc_devgen);
 
 		/* need more data? */
-		if (sc->sc_devgen == busmem->shm_gen && 
+		if (sc->sc_devgen == busmem->shm_gen &&
 		    shmif_nextpktoff(busmem, busmem->shm_last)
 		     == sc->sc_nextpacket) {
 			shmif_unlockbus(busmem);
